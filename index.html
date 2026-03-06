@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-i18n="title">mpgo Interactive Demo</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f3f4f6;
+            min-height: 100vh;
+            padding: 1rem;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        h1 {
+            text-align: center;
+            color: #1f2937;
+            font-size: 1.5rem;
+        }
+
+        .about-btn {
+            padding: 0.25rem 0.75rem;
+            border: 1px solid #d1d5db;
+            background: white;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            color: #6b7280;
+            transition: all 0.15s;
+        }
+
+        .about-btn:hover {
+            background: #f3f4f6;
+            color: #374151;
+        }
+
+        .about-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .about-overlay.visible {
+            display: flex;
+        }
+
+        .about-dialog {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
+            padding: 1.5rem;
+            max-width: 500px;
+            width: 90%;
+            position: relative;
+        }
+
+        .about-dialog h2 {
+            font-size: 1.1rem;
+            color: #1f2937;
+            margin-bottom: 1rem;
+        }
+
+        .about-dialog p {
+            font-size: 0.9rem;
+            color: #374151;
+            line-height: 1.6;
+            margin-bottom: 0.75rem;
+        }
+
+        .about-dialog p:last-of-type {
+            margin-bottom: 0;
+        }
+
+        .about-close {
+            position: absolute;
+            top: 0.75rem;
+            right: 0.75rem;
+            background: none;
+            border: none;
+            font-size: 1.25rem;
+            cursor: pointer;
+            color: #9ca3af;
+            padding: 0.25rem;
+            line-height: 1;
+        }
+
+        .about-close:hover {
+            color: #374151;
+        }
+
+        .main-layout {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 1rem;
+            overflow: visible;
+        }
+
+        @media (max-width: 900px) {
+            .main-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .canvas-area {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            padding: 1rem;
+        }
+
+        .canvas-container {
+            position: relative;
+            border: 2px solid #e5e7eb;
+            overflow: visible;
+        }
+
+        #canvas {
+            display: block;
+            cursor: crosshair;
+            background: white;
+            width: 100%;
+            height: auto;
+            aspect-ratio: 800 / 600;
+        }
+
+        #svgOverlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            overflow: visible;
+        }
+
+        .canvas-area {
+            overflow: visible;
+        }
+
+        .controls {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .control-section {
+            border-bottom: 1px solid #e5e7eb;
+            padding-bottom: 1rem;
+        }
+
+        .control-section:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .control-section h3 {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .toggle-group {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .toggle-btn {
+            padding: 0.5rem 1rem;
+            border: 1px solid #d1d5db;
+            background: white;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            transition: all 0.15s;
+        }
+
+        .toggle-btn:hover {
+            background: #f9fafb;
+        }
+
+        .toggle-btn.active {
+            background: #2563eb;
+            color: white;
+            border-color: #2563eb;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            transition: all 0.15s;
+        }
+
+        .btn-primary {
+            background: #2563eb;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #1d4ed8;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        .btn-secondary {
+            background: #6b7280;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #4b5563;
+        }
+
+        .point-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .point-item {
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            gap: 0.5rem;
+            align-items: center;
+            padding: 0.5rem;
+            background: #f9fafb;
+            border-radius: 4px;
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .point-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .point-index {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #3b82f6;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+
+        .point-item:first-child .point-index {
+            background: #22c55e;
+        }
+
+        .point-coords {
+            color: #374151;
+        }
+
+        .point-controls {
+            display: flex;
+            gap: 0.25rem;
+        }
+
+        .point-btn {
+            width: 24px;
+            height: 24px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .point-btn-delete {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .point-btn-delete:hover {
+            background: #fecaca;
+        }
+
+        .slider-group {
+            margin-bottom: 0.75rem;
+        }
+
+        .slider-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.25rem;
+            font-size: 0.875rem;
+            color: #374151;
+        }
+
+        .slider-value {
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #e5e7eb;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #2563eb;
+            cursor: pointer;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .input-group input[type="number"] {
+            width: 70px;
+            padding: 0.375rem 0.5rem;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            font-size: 0.875rem;
+        }
+
+        .input-group label {
+            font-size: 0.875rem;
+            color: #374151;
+        }
+
+        .help-text {
+            font-size: 0.75rem;
+            color: #9ca3af;
+            margin-top: 0.5rem;
+        }
+
+        .status {
+            text-align: center;
+            padding: 0.5rem;
+            font-size: 0.875rem;
+            color: #6b7280;
+        }
+
+        .status.loading {
+            color: #2563eb;
+        }
+
+        .status.error {
+            color: #ef4444;
+        }
+
+        .selected-point-editor {
+            background: #eff6ff;
+            border-radius: 4px;
+            padding: 0.75rem;
+            margin-top: 0.5rem;
+        }
+
+        .selected-point-editor h4 {
+            font-size: 0.875rem;
+            color: #1e40af;
+            margin-bottom: 0.5rem;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+        }
+
+        .checkbox-group label {
+            font-size: 0.875rem;
+            color: #374151;
+        }
+    </style>
+</head>
+<body>
+    <div class="about-overlay" id="aboutOverlay">
+        <div class="about-dialog">
+            <button class="about-close" id="aboutClose">&times;</button>
+            <h2 data-i18n="about">About</h2>
+            <div id="aboutContent"></div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <h1 data-i18n="heading">hobby.boxesandglue.dev - Interactive Hobby Curves</h1>
+            <button class="about-btn" id="btnAbout" data-i18n="about">About</button>
+        </div>
+
+        <div class="status" id="status" data-i18n="loading">Loading WASM...</div>
+
+        <div class="main-layout">
+            <div class="canvas-area">
+                <div class="canvas-container">
+                    <canvas id="canvas" width="800" height="600"></canvas>
+                    <div id="svgOverlay"></div>
+                </div>
+            </div>
+
+            <div class="controls">
+                <div class="control-section">
+                    <h3 data-i18n="pathType">Path Type</h3>
+                    <div class="toggle-group">
+                        <button class="toggle-btn active" id="btnOpen" data-i18n="open">Open</button>
+                        <button class="toggle-btn" id="btnClosed" data-i18n="closed">Closed</button>
+                    </div>
+                </div>
+
+                <div class="control-section">
+                    <h3 data-i18n="actions">Actions</h3>
+                    <div class="toggle-group">
+                        <button class="btn btn-secondary" id="btnUndo" data-i18n="undo">Undo</button>
+                        <button class="btn btn-danger" id="btnClear" data-i18n="clearAll">Clear All</button>
+                    </div>
+                </div>
+
+                <div class="control-section">
+                    <h3 data-i18n="points">Points</h3>
+                    <div class="point-list" id="pointList">
+                        <p class="help-text" data-i18n="helpText">Click on canvas to add points</p>
+                    </div>
+                    <button class="btn btn-secondary" id="btnDeselect" data-i18n="deselect" style="margin-top: 0.5rem; display: none;">Deselect</button>
+
+                    <div class="selected-point-editor" id="selectedPointEditor" style="display: none;">
+                        <h4 id="selectedPointHeader">Edit Point 0</h4>
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="isReference">
+                            <label for="isReference" data-i18n="referenceOnly">Reference only (not in path)</label>
+                        </div>
+                        <div id="pathPointControls">
+                        <div class="checkbox-group" id="isLineGroup" style="display: none;">
+                            <input type="checkbox" id="isLine">
+                            <label for="isLine" data-i18n="straightLine">Straight Line (--)</label>
+                        </div>
+                        <div class="slider-group">
+                            <div class="slider-label">
+                                <span data-i18n="tension">Tension</span>
+                                <span class="slider-value" id="pointTensionValue">1.0</span>
+                            </div>
+                            <input type="range" id="pointTensionSlider" min="0.5" max="4" step="0.1" value="1">
+                        </div>
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="useInConstraint">
+                            <label for="useInConstraint" data-i18n="incoming">Incoming</label>
+                            <select id="inConstraintType" style="margin-left: 0.5rem; font-size: 0.75rem; padding: 0.125rem 0.25rem;">
+                                <option value="direction" data-i18n="direction">Direction</option>
+                                <option value="curl" data-i18n="curl">Curl</option>
+                            </select>
+                        </div>
+                        <div class="slider-group" id="inDirectionGroup" style="display: none; margin-top: 0.5rem;">
+                            <div class="slider-label">
+                                <span data-i18n="direction">Direction</span>
+                                <span class="slider-value" id="pointInDirectionValue">0°</span>
+                            </div>
+                            <input type="range" id="pointInDirectionSlider" min="-180" max="180" step="5" value="0">
+                        </div>
+                        <div class="slider-group" id="inCurlGroup" style="display: none; margin-top: 0.5rem;">
+                            <div class="slider-label">
+                                <span data-i18n="curl">Curl</span>
+                                <span class="slider-value" id="pointInCurlValue">1.0</span>
+                            </div>
+                            <input type="range" id="pointInCurlSlider" min="0" max="10" step="0.1" value="1">
+                        </div>
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="useOutConstraint">
+                            <label for="useOutConstraint" data-i18n="outgoing">Outgoing</label>
+                            <select id="outConstraintType" style="margin-left: 0.5rem; font-size: 0.75rem; padding: 0.125rem 0.25rem;">
+                                <option value="direction" data-i18n="direction">Direction</option>
+                                <option value="curl" data-i18n="curl">Curl</option>
+                            </select>
+                        </div>
+                        <div class="slider-group" id="outDirectionGroup" style="display: none; margin-top: 0.5rem;">
+                            <div class="slider-label">
+                                <span data-i18n="direction">Direction</span>
+                                <span class="slider-value" id="pointOutDirectionValue">0°</span>
+                            </div>
+                            <input type="range" id="pointOutDirectionSlider" min="-180" max="180" step="5" value="0">
+                        </div>
+                        <div class="slider-group" id="outCurlGroup" style="display: none; margin-top: 0.5rem;">
+                            <div class="slider-label">
+                                <span data-i18n="curl">Curl</span>
+                                <span class="slider-value" id="pointOutCurlValue">1.0</span>
+                            </div>
+                            <input type="range" id="pointOutCurlSlider" min="0" max="10" step="0.1" value="1">
+                        </div>
+                        </div><!-- end pathPointControls -->
+                        <hr style="border: none; border-top: 1px solid #bfdbfe; margin: 0.75rem 0;">
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="useConstraint">
+                            <label for="useConstraint" data-i18n="constraintPosition">Position by Constraint</label>
+                        </div>
+                        <div id="constraintEditor" style="display: none; margin-top: 0.5rem;">
+                            <div style="margin-bottom: 0.5rem;">
+                                <label for="constraintType" style="font-size: 0.75rem; color: #6b7280;" data-i18n="constraintType">Type</label>
+                                <select id="constraintType" style="width: 100%; padding: 0.375rem 0.5rem; border: 1px solid #d1d5db; border-radius: 4px; font-size: 0.875rem; margin-top: 0.25rem;">
+                                    <option value="midpoint" data-i18n="midpoint">Midpoint</option>
+                                    <option value="between" data-i18n="between">Between</option>
+                                    <option value="intersection" data-i18n="intersection">Intersection</option>
+                                </select>
+                            </div>
+                            <div id="constraintRefs"></div>
+                            <div id="constraintError" style="display: none; color: #dc2626; font-size: 0.75rem; margin-top: 0.25rem;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="control-section">
+                    <h3 data-i18n="metapostCode">MetaPost Code</h3>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="showMetaPostCode">
+                        <label for="showMetaPostCode" data-i18n="showPathCode">Show Path Code</label>
+                    </div>
+                    <div id="metaPostCodeContainer" style="display: none; position: relative; margin-top: 0.5rem;">
+                        <button id="copyMetaPostCode" title="Copy to Clipboard" data-i18n-title="copyToClipboard" style="position: absolute; top: 0.5rem; right: 0.5rem; background: transparent; border: none; cursor: pointer; padding: 0.25rem; border-radius: 4px; opacity: 0.7; transition: opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#e5e7eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                            </svg>
+                        </button>
+                        <pre id="metaPostCode" style="background: #1f2937; color: #e5e7eb; padding: 0.75rem; padding-right: 2.5rem; border-radius: 4px; font-size: 0.75rem; overflow-x: auto; white-space: pre-wrap; word-break: break-all; margin: 0;"></pre>
+                    </div>
+                </div>
+
+                <div class="control-section">
+                    <h3 data-i18n="display">Display</h3>
+                    <div class="slider-group">
+                        <div class="slider-label">
+                            <span data-i18n="strokeWidth">Stroke Width</span>
+                            <span class="slider-value" id="strokeWidthValue">2</span>
+                        </div>
+                        <input type="range" id="strokeWidthSlider" min="0.5" max="10" step="0.5" value="2">
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="showGrid">
+                        <label for="showGrid" data-i18n="showGrid">Show Coordinate System</label>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="showControlPoints">
+                        <label for="showControlPoints" data-i18n="showControlPoints">Show Control Points</label>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="showTicks">
+                        <label for="showTicks" data-i18n="showTicks">Show Ticks</label>
+                    </div>
+                    <div class="slider-group" id="tickCountGroup" style="display: none; margin-top: 0.5rem;">
+                        <div class="slider-label">
+                            <span data-i18n="tickCount">Tick Count</span>
+                            <span class="slider-value" id="tickCountValue">10</span>
+                        </div>
+                        <input type="range" id="tickCountSlider" min="2" max="50" step="1" value="10">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="wasm_exec.js"></script>
+    <script src="main.js"></script>
+</body>
+</html>
