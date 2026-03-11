@@ -4,6 +4,8 @@ Interactive web demo for the [mpgo](https://github.com/boxesandglue/mpgo) librar
 
 **Live demo: <https://hobby.boxesandglue.dev>**
 
+![Screenshot](screenshot.png)
+
 ## Build
 
 ```bash
